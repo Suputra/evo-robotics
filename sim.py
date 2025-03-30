@@ -1,3 +1,4 @@
+#! /Users/saahas/morpho-rl/.venv/bin/python
 import pybullet as p
 
 import pybullet_data
@@ -9,7 +10,9 @@ p.configureDebugVisualizer(p.COV_ENABLE_GUI,0)
 
 p.setGravity(0,0,-9.8)
 planeId = p.loadURDF("plane.urdf")
-p.loadSDF("box.sdf")
+robotId = p.loadURDF("body.urdf")
+
+p.loadSDF("world.sdf")
 
 
 for _ in range(10000):
