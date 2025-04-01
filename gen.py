@@ -8,9 +8,13 @@ def world():
 
 def robot():
     pyrosim.Start_URDF("body.urdf")
-    pyrosim.Send_Cube(name="Torso", pos=[0,0,0.5] , size=[1, 1, 1])
-    pyrosim.Send_Cube(name="Leg", pos=[0.5,0,0.5] , size=[1, 1, 1])
-    pyrosim.Send_Joint(name = "Torso_Leg" , parent= "Torso" , child = "Leg" , type = "revolute", position = [0.5, 0, 1])
+    pyrosim.Send_Cube(name="torso", pos=[0, 0, 1.5] , size=[1, 1, 1])
+    pyrosim.Send_Cube(name="rightleg", pos=[0.5,0,-0.5] , size=[1, 1, 1])
+    pyrosim.Send_Cube(name="leftleg", pos=[-0.5,0,-0.5] , size=[1, 1, 1])
+
+    pyrosim.Send_Joint(name = "torso_rightleg" , parent= "torso" , child = "rightleg" , type = "revolute", position = [0.5, 0, 1])
+    pyrosim.Send_Joint(name = "torso_leftleg" , parent= "torso" , child = "leftleg" , type = "revolute", position = [-0.5, 0, 1])
+
     pyrosim.End()
 
 world()
