@@ -19,3 +19,7 @@ def robot():
 
 world()
 robot()
+
+## Notes:
+# base link and joints all are absolute
+# following links are based on parent joints
