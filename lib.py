@@ -23,11 +23,10 @@ class World:
             # so that we can have multiple robots with the same form
             self.ids[name] = id
             self.robots[name] = {}
-            pyrosim.Prepare_To_Simulate(id)
 
         for sdf in sdfs:
             sdf()
-            p.loadSDF(sdf.__name__)
+            p.loadSDF(sdf.__name__ + ".sdf")
 
         self.robots["plane"] = p.loadURDF("plane.urdf")
 
