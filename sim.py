@@ -1,5 +1,6 @@
 #! /Users/saahas/morpho-rl/.venv/bin/python
 import math
+import random
 import pybullet as p
 import numpy as np
 import pyrosim.pyrosim as pyrosim
@@ -31,14 +32,14 @@ for i in range(SAMPLES):
         bodyIndex = robotId,
         jointName = "torso_rightleg",
         controlMode = p.POSITION_CONTROL,
-        targetPosition = math.pi/4,
+        targetPosition = random.random(),
         maxForce = 500)
     
     pyrosim.Set_Motor_For_Joint(
         bodyIndex = robotId,
         jointName = "torso_leftleg",
         controlMode = p.POSITION_CONTROL,
-        targetPosition = -math.pi/4,
+        targetPosition = random.random(),
         maxForce = 500)
 
 print(rightleg_data)
