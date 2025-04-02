@@ -9,29 +9,19 @@ import pyrosim.pyrosim as pyrosim
 
 from lib import World, world, robot
 
+robots = {
+    "robot1": robot,
+}
+
+objects = {
+    world,
+}
 
 SAMPLES = 500
-with World(urdfs={"robot1": robot}, sdfs=[world]) as w:
-    w.robots["rightleg"] = np.zeros(w.samples)
-    robotId = w.ids["robot1"]
-
+with World(urdfs=robots, sdfs=objects) as w:
     for i in range(w.samples):
-        w.robots["rightleg"][i] = pyrosim.Get_Touch_Sensor_Value_For_Link(
-            "rightleg", bodyID=robotId
-        )
+        w.robots["robot1"].sense("rightleg", i)
         time.sleep(0.01)
-        pyrosim.Set_Motor_For_Joint(
-            bodyIndex=robotId,
-            jointName="torso_rightleg",
-            controlMode=p.POSITION_CONTROL,
-            targetPosition=random.random() * math.pi / 2,
-            maxForce=500,
-        )
-        pyrosim.Set_Motor_For_Joint(
-            bodyIndex=robotId,
-            jointName="torso_leftleg",
-            controlMode=p.POSITION_CONTROL,
-            targetPosition=random.random() * math.pi / 2,
-            maxForce=500,
-        )
+        w.robots["robot1"].motor("torso_rightleg", random.random() * math.pi / 2)
+        w.robots["robot1"].motor("torso_leftleg", random.random() * math.pi / 2)
         w.step()

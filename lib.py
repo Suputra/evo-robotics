@@ -7,28 +7,24 @@ import pybullet as p
 
 
 class World:
-    def __init__(self, samples=500, urdfs={}, sdfs=[]):
+    def __init__(self, samples=100, urdfs={}, sdfs=[]):
         physics_client = p.connect(p.GUI)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
         p.setGravity(0, 0, -50)
 
         self.samples = samples
-        self.ids = {}
         self.robots = {}
         # make urdfs and sdfs
         for name, urdf in urdfs.items():
-            urdf()
-            id = p.loadURDF(urdf.__name__ + ".urdf")
-            # so that we can have multiple robots with the same form
-            self.ids[name] = id
-            self.robots[name] = {}
+            self.robots[name] = Robot(name, urdf, samples)
 
         for sdf in sdfs:
             sdf()
             p.loadSDF(sdf.__name__ + ".sdf")
 
-        self.robots["plane"] = p.loadURDF("plane.urdf")
+        p.loadURDF("plane.urdf")
+        print(self.robots)
 
     def __enter__(self):
         return self
@@ -37,10 +33,57 @@ class World:
         p.stepSimulation()
 
     def __exit__(self, type, value, traceback):
-        for robotname, senses in self.robots.items():
-            for sense, data in senses.items():
-                np.save(f"data/{robotname}_{sense}.npy", data)
+        for name, robot in self.robots.items():
+            robot.save_data()
         p.disconnect()
+
+
+class Robot:
+    def __init__(self, name, urdf_fn, samples):
+        self.name = name
+        self.senses = {}
+        self.samples = samples
+
+        # Generate and load the URDF
+        urdf_fn()
+        self.id = p.loadURDF(urdf_fn.__name__ + ".urdf")
+
+    def sense(self, link_name, index, sensor_type="touch"):
+        """Get and store sensor reading in one concise call"""
+        if sensor_type == "touch":
+            data = pyrosim.Get_Touch_Sensor_Value_For_Link(link_name, bodyID=self.id)
+        # Add other sensor types as needed
+
+        # Create key for this sensor in the format "link_type"
+        sensor_key = f"{link_name}_{sensor_type}"
+
+        if sensor_key not in self.senses:
+            # Auto-create sense array based on data shape
+            self.senses[sensor_key] = np.zeros(self.samples)
+
+        self.senses[sensor_key][index] = data
+        return data
+
+    def motor(
+        self,
+        joint_name,
+        target_position,
+        control_mode=p.POSITION_CONTROL,
+        max_force=500,
+    ):
+        """Set motor for joint in a concise call"""
+        pyrosim.Set_Motor_For_Joint(
+            bodyIndex=self.id,
+            jointName=joint_name,
+            controlMode=control_mode,
+            targetPosition=target_position,
+            maxForce=max_force,
+        )
+
+    def save_data(self):
+        """Save all sensor data to files"""
+        for sense_name, data in self.senses.items():
+            np.save(f"data/{self.name}_{sense_name}.npy", data)
 
 
 ## urdfs
