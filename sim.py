@@ -9,19 +9,24 @@ import pyrosim.pyrosim as pyrosim
 
 from lib import World, world, robot
 
-robots = {
+ROBOTS = {
     "robot1": robot,
 }
 
-objects = {
+OBJECTS = {
     world,
 }
 
 SAMPLES = 500
-with World(urdfs=robots, sdfs=objects) as w:
+
+with World(samples=SAMPLES, urdfs=ROBOTS, sdfs=OBJECTS) as w:
+    # how will the robot act (dumb - no sensor use)
+    for joint in w.robots["robot1"].joints:
+        w.robots["robot1"].policy[joint] = np.random.rand(w.samples)
+
+    # main loop
     for i in range(w.samples):
-        w.robots["robot1"].sense("rightleg", i)
+        w.robots["robot1"].sense(i)
+        w.robots["robot1"].act(i)
         time.sleep(0.01)
-        w.robots["robot1"].motor("torso_rightleg", random.random() * math.pi / 2)
-        w.robots["robot1"].motor("torso_leftleg", random.random() * math.pi / 2)
         w.step()

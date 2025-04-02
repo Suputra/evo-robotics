@@ -8,7 +8,7 @@ import pybullet as p
 
 class World:
     def __init__(self, samples=100, urdfs={}, sdfs=[]):
-        physics_client = p.connect(p.GUI)
+        p.connect(p.GUI)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
         p.setGravity(0, 0, -50)
@@ -24,7 +24,6 @@ class World:
             p.loadSDF(sdf.__name__ + ".sdf")
 
         p.loadURDF("plane.urdf")
-        print(self.robots)
 
     def __enter__(self):
         return self
@@ -42,43 +41,50 @@ class Robot:
     def __init__(self, name, urdf_fn, samples):
         self.name = name
         self.senses = {}
+        self.policy = {}
         self.samples = samples
 
         # Generate and load the URDF
         urdf_fn()
         self.id = p.loadURDF(urdf_fn.__name__ + ".urdf")
 
-    def sense(self, link_name, index, sensor_type="touch"):
+        # Get all link names for this robot
+        self.links = []
+        self.joints = []
+        self.joint_indices = {}
+        for i in range(p.getNumJoints(self.id)):
+            info = p.getJointInfo(self.id, i)
+            # Joint info[12] contains the link name
+            link_name = info[12].decode("utf-8")
+            self.links.append(link_name)
+            joint_name = info[1].decode("utf-8")
+            self.joints.append(joint_name)
+            self.joint_indices[joint_name] = i
+        # Add the base link (which is often not part of joints)
+        self.links.append(p.getBodyInfo(self.id)[0].decode("utf-8"))
+
+        for link in self.links:
+            self.senses[link + "_touch"] = np.zeros(self.samples)
+
+        for joint in self.joints:
+            self.policy[joint] = np.zeros(self.samples)
+
+    def sense(self, index):
         """Get and store sensor reading in one concise call"""
-        if sensor_type == "touch":
-            data = pyrosim.Get_Touch_Sensor_Value_For_Link(link_name, bodyID=self.id)
-        # Add other sensor types as needed
+        for link in self.links:
+            data = pyrosim.Get_Touch_Sensor_Value_For_Link(link, bodyID=self.id)
 
-        # Create key for this sensor in the format "link_type"
-        sensor_key = f"{link_name}_{sensor_type}"
+            self.senses[link + "_touch"][index] = data
 
-        if sensor_key not in self.senses:
-            # Auto-create sense array based on data shape
-            self.senses[sensor_key] = np.zeros(self.samples)
-
-        self.senses[sensor_key][index] = data
-        return data
-
-    def motor(
-        self,
-        joint_name,
-        target_position,
-        control_mode=p.POSITION_CONTROL,
-        max_force=500,
-    ):
-        """Set motor for joint in a concise call"""
-        pyrosim.Set_Motor_For_Joint(
-            bodyIndex=self.id,
-            jointName=joint_name,
-            controlMode=control_mode,
-            targetPosition=target_position,
-            maxForce=max_force,
-        )
+    def act(self, index, control_mode=p.POSITION_CONTROL, max_force=500):
+        for joint in self.joints:
+            pyrosim.Set_Motor_For_Joint(
+                bodyIndex=self.id,
+                jointName=joint,
+                controlMode=control_mode,
+                targetPosition=self.policy[joint][index],
+                maxForce=max_force,
+            )
 
     def save_data(self):
         """Save all sensor data to files"""
@@ -91,7 +97,7 @@ class Robot:
 # base link and joints all are absolute
 # following links are based on parent joints
 
-# urdf functions will must have the same name as the file they write to
+# urdf functions must have the same name as the file they write to
 
 
 def world():
