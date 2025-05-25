@@ -3,7 +3,8 @@ from pyrosim.synapse import SYNAPSE
 
 
 class NEURAL_NETWORK:
-    def __init__(self, nndfFileName):
+    def __init__(self, nndfFileName, body_id):
+        self.body_id = body_id
         self.neurons = {}
         self.synapses = {}
         f = open(nndfFileName, "r")
@@ -17,9 +18,28 @@ class NEURAL_NETWORK:
         self.Print_Motor_Neuron_Values()
         print("")
 
+    def Update(self):
+        for nid in self.neurons:
+            if self.neurons[nid].Is_Sensor_Neuron():
+                self.neurons[nid].Update_Sensor_Neuron()
+            else:
+                self.neurons[nid].Update_Hidden_Or_Motor_Neuron()
+
+    def Get_Neuron_Names(self):
+        return self.neurons.keys()
+
+    def Is_Motor_Neuron(self, neuron_name):
+        return self.neurons[neuron_name].Is_Motor_Neuron()
+
+    def Get_Motor_Neurons_Joint(self, neuron_name):
+        return self.neurons[neuron_name].Get_Joint_Name()
+
+    def Get_Value_Of(self, neuron_name):
+        return self.neurons[neuron_name].Get_Value()
+
     # ---------------- Private methods --------------------------------------
     def Add_Neuron_According_To(self, line):
-        neuron = NEURON(line)
+        neuron = NEURON(line, self.body_id)
         self.neurons[neuron.Get_Name()] = neuron
 
     def Add_Synapse_According_To(self, line):

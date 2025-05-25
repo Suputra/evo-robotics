@@ -1,14 +1,16 @@
 import math
 import pyrosim.constants as c
+import pyrosim.pyrosim as pyrosim
 
 
 class NEURON:
-    def __init__(self, line):
+    def __init__(self, line, body_id):
         self.Determine_Name(line)
         self.Determine_Type(line)
         self.Search_For_Link_Name(line)
         self.Search_For_Joint_Name(line)
         self.Set_Value(0.0)
+        self.body_id = body_id
 
     def Add_To_Value(self, value):
         self.Set_Value(self.Get_Value() + value)
@@ -42,6 +44,16 @@ class NEURON:
 
     def Set_Value(self, value):
         self.value = value
+
+    def Update_Sensor_Neuron(self):
+        self.Set_Value(
+            pyrosim.Get_Touch_Sensor_Value_For_Link(
+                self.Get_Link_Name(), bodyID=self.body_id
+            )
+        )
+
+    def Update_Hidden_Or_Motor_Neuron(self):
+        self.Set_Value(math.pi / 4)
 
     # -------------------------- Private methods -------------------------
     def Determine_Name(self, line):

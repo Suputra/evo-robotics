@@ -1,6 +1,7 @@
 import pyrosim.pyrosim as pyrosim
-from dataclasses import dataclass
 import numpy as np
+from pyrosim.neuralNetwork import NEURAL_NETWORK
+
 
 import pybullet_data
 import pybullet as p
@@ -16,8 +17,9 @@ class World:
         self.samples = samples
         self.robots = {}
         # make urdfs and sdfs
-        for name, urdf in urdfs.items():
-            self.robots[name] = Robot(name, urdf, samples)
+        for name, funcs in urdfs.items():
+            urdf_fn, nndf_fn = funcs
+            self.robots[name] = Robot(name, urdf_fn, nndf_fn, samples)
 
         for sdf in sdfs:
             sdf()
@@ -38,7 +40,7 @@ class World:
 
 
 class Robot:
-    def __init__(self, name, urdf_fn, samples):
+    def __init__(self, name, urdf_fn, nndf_fn, samples):
         self.name = name
         self.senses = {}
         self.policy = {}
@@ -46,7 +48,9 @@ class Robot:
 
         # Generate and load the URDF
         urdf_fn()
+        nndf_fn()
         self.id = p.loadURDF(urdf_fn.__name__ + ".urdf")
+        self.nn = NEURAL_NETWORK(nndf_fn.__name__ + ".nndf", body_id=self.id)
 
         # Get all link names for this robot
         self.links = []
@@ -77,14 +81,22 @@ class Robot:
             self.senses[link + "_touch"][index] = data
 
     def act(self, index, control_mode=p.POSITION_CONTROL, max_force=500):
-        for joint in self.joints:
-            pyrosim.Set_Motor_For_Joint(
-                bodyIndex=self.id,
-                jointName=joint,
-                controlMode=control_mode,
-                targetPosition=self.policy[joint][index],
-                maxForce=max_force,
-            )
+        for neuron in self.nn.Get_Neuron_Names():
+            if self.nn.Is_Motor_Neuron(neuron):
+                joint = self.nn.Get_Motor_Neurons_Joint(neuron)
+                target = self.nn.Get_Value_Of(neuron)
+                pyrosim.Set_Motor_For_Joint(
+                    bodyIndex=self.id,
+                    jointName=joint,
+                    controlMode=control_mode,
+                    targetPosition=target,
+                    maxForce=max_force,
+                )
+                print(neuron, joint, target)
+
+    def think(self, index):
+        self.nn.Update()
+        self.nn.Print()
 
     def save_data(self):
         """Save all sensor data to files"""
@@ -100,8 +112,8 @@ class Robot:
 # urdf functions must have the same name as the file they write to
 
 
-def world():
-    pyrosim.Start_SDF("world.sdf")
+def box():
+    pyrosim.Start_SDF("box.sdf")
     pyrosim.Send_Cube(name="Box", pos=[-2, 2, 0.5], size=[1, 1, 1])
     pyrosim.End()
 
@@ -125,4 +137,16 @@ def robot():
         type="revolute",
         position=[-0.5, 0, 1],
     )
+    pyrosim.End()
+
+
+def brain():
+    pyrosim.Start_NeuralNetwork("brain.nndf")
+    pyrosim.Send_Sensor_Neuron(name=0, linkName="torso")
+    pyrosim.Send_Sensor_Neuron(name=1, linkName="rightleg")
+    pyrosim.Send_Sensor_Neuron(name=2, linkName="leftleg")
+
+    pyrosim.Send_Motor_Neuron(name=3, jointName="torso_rightleg")
+    pyrosim.Send_Motor_Neuron(name=4, jointName="torso_leftleg")
+
     pyrosim.End()
