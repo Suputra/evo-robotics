@@ -92,7 +92,6 @@ class Robot:
                     targetPosition=target,
                     maxForce=max_force,
                 )
-                print(neuron, joint, target)
 
     def think(self, index):
         self.nn.Update()
@@ -148,5 +147,11 @@ def brain():
 
     pyrosim.Send_Motor_Neuron(name=3, jointName="torso_rightleg")
     pyrosim.Send_Motor_Neuron(name=4, jointName="torso_leftleg")
+
+    pyrosim.Send_Synapse(sourceNeuronName=1, targetNeuronName=3, weight=-1.0)
+    pyrosim.Send_Synapse(sourceNeuronName=2, targetNeuronName=3, weight=-1.0)
+
+    pyrosim.Send_Synapse(sourceNeuronName=1, targetNeuronName=4, weight=-1.0)
+    pyrosim.Send_Synapse(sourceNeuronName=2, targetNeuronName=4, weight=-1.0)
 
     pyrosim.End()

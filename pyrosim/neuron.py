@@ -1,6 +1,7 @@
 import math
 import pyrosim.constants as c
 import pyrosim.pyrosim as pyrosim
+import sys
 
 
 class NEURON:
@@ -52,8 +53,18 @@ class NEURON:
             )
         )
 
-    def Update_Hidden_Or_Motor_Neuron(self):
-        self.Set_Value(math.pi / 4)
+    def Allow_Presynaptic_Neuron_To_Influence_Me(self, weight, presynaptic_neuron):
+        print(weight, presynaptic_neuron.Get_Value())
+        self.Add_To_Value(weight * presynaptic_neuron.Get_Value())
+
+    def Update_Hidden_Or_Motor_Neuron(self, synapses, neurons):
+        self.Set_Value(0.0)  # Reset neuron's value
+        for key in synapses:
+            if key[1] == self.name:
+                self.Allow_Presynaptic_Neuron_To_Influence_Me(
+                    synapses[key].Get_Weight(), neurons[key[0]]
+                )
+        self.Threshold()
 
     # -------------------------- Private methods -------------------------
     def Determine_Name(self, line):

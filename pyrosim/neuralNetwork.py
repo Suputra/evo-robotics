@@ -23,7 +23,9 @@ class NEURAL_NETWORK:
             if self.neurons[nid].Is_Sensor_Neuron():
                 self.neurons[nid].Update_Sensor_Neuron()
             else:
-                self.neurons[nid].Update_Hidden_Or_Motor_Neuron()
+                self.neurons[nid].Update_Hidden_Or_Motor_Neuron(
+                    self.synapses, self.neurons
+                )
 
     def Get_Neuron_Names(self):
         return self.neurons.keys()
