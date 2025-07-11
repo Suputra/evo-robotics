@@ -322,7 +322,11 @@ class NeuralNetwork:
         contacts = p.getContactPoints(bodyA=self.body_id)
 
         for contact in contacts:
-            if contact[4] == link_index:  # linkIndexB
+            # getContactPoints returns tuples where index 3 corresponds to the
+            # link index of bodyA (this robot). We previously compared against
+            # index 4 which is the link index of the other body, causing the
+            # sensor to never register contact.
+            if contact[3] == link_index:  # linkIndexA
                 return 1.0
         return -1.0
 
