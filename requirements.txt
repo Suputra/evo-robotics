@@ -1,18 +1,25 @@
+absl-py==2.3.1
 contourpy==1.3.1
 cycler==0.12.1
+etils==1.13.0
 filelock==3.18.0
 fonttools==4.56.0
 fsspec==2025.3.2
+glfw==2.10.0
+importlib-resources==6.5.2
 jinja2==3.1.6
 kiwisolver==1.4.8
 markupsafe==3.0.2
 matplotlib==3.10.1
+-e file:///Users/saahas/morpho-rl
 mpmath==1.3.0
+mujoco==3.4.0
 networkx==3.4.2
 numpy==2.2.4
 packaging==24.2
 pillow==11.1.0
 pybullet==3.2.7
+pyopengl==3.1.10
 pyparsing==3.2.3
 python-dateutil==2.9.0.post0
 setuptools==78.1.0
@@ -20,3 +27,4 @@ six==1.17.0
 sympy==1.13.1
 torch==2.6.0
 typing-extensions==4.13.0
+zipp==3.23.0
