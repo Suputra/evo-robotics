@@ -2,7 +2,7 @@
 
 A streamlined, concise PyBullet simulation helper library.
 
-This project is setup with uv. For instructions on how setup uv, check out https://suputra.github.io/snippets/uv.
+This project is setup with uv. For instructions on how setup uv, check out https://saah.as/tools/uv.
 
 ## Quickstart
 
@@ -10,8 +10,8 @@ Checkout sim.py for a simple start script of this
 
 setup venv:
 ```
-uv venv 
-uv pip install -r requirements.txt
+uv venv
+uv pip install -e .
 chmod +x ./sim.py
 ```
 
